@@ -1,10 +1,9 @@
 package database;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+
+import java.sql.*;
 
 public class DatabaseConnection {
-    // 默认的数据库连接信息
+
     private static final String DEFAULT_URL = "jdbc:mysql://localhost:3306/db";
     private static final String DEFAULT_USER = "root";
     private static final String DEFAULT_PASSWORD = "root";
@@ -29,6 +28,10 @@ public class DatabaseConnection {
             return DriverManager.getConnection(url, user, password);
         } catch (ClassNotFoundException e) {
             throw new SQLException("未找到 MySQL 驱动程序", e);
+        } catch (SQLException e) {
+            // 捕获 SQL 异常并输出友好的错误信息
+            System.err.println("数据库连接失败: " + e.getMessage());
+            throw e; // 抛出异常，调用者可以进一步处理
         }
     }
 }

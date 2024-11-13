@@ -12,6 +12,7 @@ public class CRUDOperations {
             System.out.println("插入的行数: " + rowsAffected);
         } catch (SQLException e) {
             System.out.println("执行 SQL 时发生错误: " + e.getMessage());
+            e.printStackTrace(); // 打印堆栈信息
         }
     }
 
@@ -20,14 +21,18 @@ public class CRUDOperations {
         try (Connection conn = DatabaseConnection.getConnection(null);
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                // 假设我们查询的是一个用户表，显示用户的 ID 和名称
+            if (!rs.next()) {
+                System.out.println("没有找到符合条件的记录。");
+                return; // 如果查询结果为空，提前返回
+            }
+            do {
                 int id = rs.getInt(1);
                 String name = rs.getString(2);
                 System.out.println("ID: " + id + ", 姓名: " + name);
-            }
+            } while (rs.next());
         } catch (SQLException e) {
             System.out.println("执行 SQL 时发生错误: " + e.getMessage());
+            e.printStackTrace(); // 打印堆栈信息
         }
     }
 
@@ -39,6 +44,7 @@ public class CRUDOperations {
             System.out.println("更新的行数: " + rowsAffected);
         } catch (SQLException e) {
             System.out.println("执行 SQL 时发生错误: " + e.getMessage());
+            e.printStackTrace(); // 打印堆栈信息
         }
     }
 
@@ -50,6 +56,7 @@ public class CRUDOperations {
             System.out.println("删除的行数: " + rowsAffected);
         } catch (SQLException e) {
             System.out.println("执行 SQL 时发生错误: " + e.getMessage());
+            e.printStackTrace(); // 打印堆栈信息
         }
     }
 }
