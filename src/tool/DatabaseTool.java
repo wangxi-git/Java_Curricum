@@ -5,10 +5,12 @@ import database.*;
 import java.sql.SQLException;
 import java.util.InputMismatchException;
 import java.util.Scanner;
+import java.util.concurrent.*;
 
 public class DatabaseTool {
 
     private static Scanner scanner = new Scanner(System.in);
+    private static ExecutorService executorService = Executors.newFixedThreadPool(5); // 创建一个线程池，最多同时处理 5 个线程
 
     // 显示菜单
     private static void showMenu() {
@@ -19,6 +21,11 @@ public class DatabaseTool {
         System.out.println("4. 删除记录");
         System.out.println("5. 退出");
         System.out.print("请输入选项 (1-5): ");
+    }
+
+    // 提交数据库操作任务到线程池
+    private static void executeDatabaseOperation(Runnable task) {
+        executorService.submit(task); // 将任务提交到线程池执行
     }
 
     // 主程序入口
@@ -37,7 +44,7 @@ public class DatabaseTool {
 
             // 尝试连接数据库
             System.out.println("连接数据库...");
-            DatabaseConnection.getConnection(new String[] { url, user, password });
+            DatabaseConnectionPool.getConnection(); // 通过连接池来获取连接
             System.out.println("连接成功!");
 
             // 进入命令行工具交互
@@ -50,29 +57,27 @@ public class DatabaseTool {
                         case 1:
                             System.out.print("请输入 SQL 插入语句: ");
                             String insertSQL = scanner.nextLine();
-                            // 捕获执行 SQL 时可能出现的异常
-                            CRUDOperations.create(insertSQL); // 这里的 create 方法会处理 SQLException
+                            executeDatabaseOperation(() -> CRUDOperations.create(insertSQL)); // 直接提交任务
                             break;
                         case 2:
                             System.out.print("请输入 SQL 查询语句: ");
                             String selectSQL = scanner.nextLine();
-                            // 捕获执行 SQL 时可能出现的异常
-                            CRUDOperations.read(selectSQL); // 这里的 read 方法会处理 SQLException
+                            executeDatabaseOperation(() -> CRUDOperations.read(selectSQL)); // 直接提交任务
                             break;
                         case 3:
                             System.out.print("请输入 SQL 更新语句: ");
                             String updateSQL = scanner.nextLine();
-                            // 捕获执行 SQL 时可能出现的异常
-                            CRUDOperations.update(updateSQL); // 这里的 update 方法会处理 SQLException
+                            executeDatabaseOperation(() -> CRUDOperations.update(updateSQL)); // 直接提交任务
                             break;
                         case 4:
                             System.out.print("请输入 SQL 删除语句: ");
                             String deleteSQL = scanner.nextLine();
-                            // 捕获执行 SQL 时可能出现的异常
-                            CRUDOperations.delete(deleteSQL); // 这里的 delete 方法会处理 SQLException
+                            executeDatabaseOperation(() -> CRUDOperations.delete(deleteSQL)); // 直接提交任务
                             break;
                         case 5:
                             System.out.println("退出程序...");
+                            executorService.shutdown(); // 关闭线程池
+                            DatabaseConnectionPool.close(); // 关闭连接池
                             return; // 退出程序
                         default:
                             System.out.println("无效选项，请重新输入.");
