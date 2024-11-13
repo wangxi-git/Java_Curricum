@@ -5,12 +5,14 @@ import database.*;
 import java.sql.SQLException;
 import java.util.InputMismatchException;
 import java.util.Scanner;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class DatabaseTool {
 
     private static Scanner scanner = new Scanner(System.in);
-    private static ExecutorService executorService = Executors.newFixedThreadPool(5); // 创建一个线程池，最多同时处理 5 个线程
+    private static ExecutorService executorService = Executors.newFixedThreadPool(5); // 使用 5 个线程的线程池
+    private static CRUDOperations crudOperations = new CRUDOperationsImpl(); // 通过接口调用实现类
 
     // 显示菜单
     private static void showMenu() {
@@ -21,11 +23,6 @@ public class DatabaseTool {
         System.out.println("4. 删除记录");
         System.out.println("5. 退出");
         System.out.print("请输入选项 (1-5): ");
-    }
-
-    // 提交数据库操作任务到线程池
-    private static void executeDatabaseOperation(Runnable task) {
-        executorService.submit(task); // 将任务提交到线程池执行
     }
 
     // 主程序入口
@@ -42,10 +39,9 @@ public class DatabaseTool {
                 password = args[2]; // 第三个参数是密码
             }
 
-            // 尝试连接数据库
-            System.out.println("连接数据库...");
-            DatabaseConnectionPool.getConnection(); // 通过连接池来获取连接
-            System.out.println("连接成功!");
+            // 连接数据库
+            DatabaseConnectionPool.getConnection();
+            System.out.println("数据库连接成功!");
 
             // 进入命令行工具交互
             while (true) {
@@ -57,22 +53,22 @@ public class DatabaseTool {
                         case 1:
                             System.out.print("请输入 SQL 插入语句: ");
                             String insertSQL = scanner.nextLine();
-                            executeDatabaseOperation(() -> CRUDOperations.create(insertSQL)); // 直接提交任务
+                            executorService.submit(() -> crudOperations.create(insertSQL)); // 提交任务到线程池
                             break;
                         case 2:
                             System.out.print("请输入 SQL 查询语句: ");
                             String selectSQL = scanner.nextLine();
-                            executeDatabaseOperation(() -> CRUDOperations.read(selectSQL)); // 直接提交任务
+                            executorService.submit(() -> crudOperations.read(selectSQL)); // 提交任务到线程池
                             break;
                         case 3:
                             System.out.print("请输入 SQL 更新语句: ");
                             String updateSQL = scanner.nextLine();
-                            executeDatabaseOperation(() -> CRUDOperations.update(updateSQL)); // 直接提交任务
+                            executorService.submit(() -> crudOperations.update(updateSQL)); // 提交任务到线程池
                             break;
                         case 4:
                             System.out.print("请输入 SQL 删除语句: ");
                             String deleteSQL = scanner.nextLine();
-                            executeDatabaseOperation(() -> CRUDOperations.delete(deleteSQL)); // 直接提交任务
+                            executorService.submit(() -> crudOperations.delete(deleteSQL)); // 提交任务到线程池
                             break;
                         case 5:
                             System.out.println("退出程序...");
