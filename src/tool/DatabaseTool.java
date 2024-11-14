@@ -7,6 +7,7 @@ import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class DatabaseTool {
 
@@ -23,6 +24,34 @@ public class DatabaseTool {
         System.out.println("4. 删除记录");
         System.out.println("5. 退出");
         System.out.print("请输入选项 (1-5): ");
+    }
+
+    // 执行数据库操作的同步方法
+    private static void executeOperation(String sql, String operationType) {
+        try {
+            switch (operationType) {
+                case "CREATE":
+                    crudOperations.create(sql);
+                    System.out.println("插入数据成功！");
+                    break;
+                case "READ":
+                    crudOperations.read(sql);
+                    System.out.println("查询完成！");
+                    break;
+                case "UPDATE":
+                    crudOperations.update(sql);
+                    System.out.println("更新数据成功！");
+                    break;
+                case "DELETE":
+                    crudOperations.delete(sql);
+                    System.out.println("删除数据成功！");
+                    break;
+                default:
+                    System.out.println("无效操作");
+            }
+        } catch (Exception e) {
+            System.out.println("操作失败: " + e.getMessage());
+        }
     }
 
     // 主程序入口
@@ -49,26 +78,28 @@ public class DatabaseTool {
                     showMenu();
                     int choice = scanner.nextInt();
                     scanner.nextLine(); // 消耗换行符
+
+                    // 根据选择执行相应操作
                     switch (choice) {
                         case 1:
                             System.out.print("请输入 SQL 插入语句: ");
                             String insertSQL = scanner.nextLine();
-                            executorService.submit(() -> crudOperations.create(insertSQL)); // 提交任务到线程池
+                            executeOperation(insertSQL, "CREATE"); // 执行插入操作并等待操作完成
                             break;
                         case 2:
                             System.out.print("请输入 SQL 查询语句: ");
                             String selectSQL = scanner.nextLine();
-                            executorService.submit(() -> crudOperations.read(selectSQL)); // 提交任务到线程池
+                            executeOperation(selectSQL, "READ"); // 执行查询操作并等待操作完成
                             break;
                         case 3:
                             System.out.print("请输入 SQL 更新语句: ");
                             String updateSQL = scanner.nextLine();
-                            executorService.submit(() -> crudOperations.update(updateSQL)); // 提交任务到线程池
+                            executeOperation(updateSQL, "UPDATE"); // 执行更新操作并等待操作完成
                             break;
                         case 4:
                             System.out.print("请输入 SQL 删除语句: ");
                             String deleteSQL = scanner.nextLine();
-                            executorService.submit(() -> crudOperations.delete(deleteSQL)); // 提交任务到线程池
+                            executeOperation(deleteSQL, "DELETE"); // 执行删除操作并等待操作完成
                             break;
                         case 5:
                             System.out.println("退出程序...");
@@ -79,6 +110,10 @@ public class DatabaseTool {
                             System.out.println("无效选项，请重新输入.");
                             break;
                     }
+
+                    // 等待用户输入后显示菜单
+                    TimeUnit.SECONDS.sleep(1); // 确保输出操作提示后再显示菜单
+
                 } catch (InputMismatchException e) {
                     System.out.println("无效输入，请输入数字选项。");
                     scanner.nextLine(); // 清空输入缓存，等待下一次输入
