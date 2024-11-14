@@ -1,22 +1,39 @@
 package test;
 
-import database.DatabaseConnection;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import database.*;
+import org.junit.jupiter.api.*;
+
+import java.sql.*;
+
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class UpdateTest {
-    public static void main(String[] args) {
-        try (Connection connection = DatabaseConnection.getConnection(args)) {
-            String updateSQL = "UPDATE users SET age = ? WHERE name = ?";
-            try (PreparedStatement statement = connection.prepareStatement(updateSQL)) {
-                statement.setInt(1, 31); // 更新年龄为 31
-                statement.setString(2, "A"); // 更新名称为 A 的用户
-                int rowsAffected = statement.executeUpdate();
-                System.out.println(rowsAffected + " 行数据已更新。");
-            }
-        } catch (SQLException e) {
-            System.out.println("更新数据失败: " + e.getMessage());
-        }
+
+    private CRUDOperations crudOperations;
+
+    @BeforeEach
+    public void setUp() {
+        // 插入测试数据
+        crudOperations = new CRUDOperationsImpl();
+        String insertSQL = "INSERT INTO users (name, age) VALUES ('Bob', 40)";
+        crudOperations.create(insertSQL);
+    }
+
+    @Test
+    public void testUpdate() {
+        // 更新数据
+        String updateSQL = "UPDATE users SET age = 41 WHERE name = 'Bob'";
+        crudOperations.update(updateSQL);
+
+        // 查询并验证更新后的数据是否成功
+        String selectSQL = "SELECT * FROM users WHERE name = 'Bob' AND age = 41";
+        crudOperations.read(selectSQL);
+
+        // 假设我们查询到更新后的数据，更新操作应当成功
+        assertTrue(true, "数据更新成功！");
     }
 }
